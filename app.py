@@ -3,10 +3,8 @@ from werkzeug.utils import secure_filename
 import os
 import sys
 import tempfile
-from pathlib import Path
-import json
 
-# Add modules to path
+# Add project root to path so modules package is importable
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from modules.pdf_reader import extract_text_from_pdf
@@ -24,7 +22,6 @@ UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'pdf'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
-# Create uploads folder if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
@@ -45,37 +42,34 @@ def upload_resume():
     try:
         if 'file' not in request.files:
             return jsonify({'error': 'No file part'}), 400
-        
+
         file = request.files['file']
-        
+
         if file.filename == '':
             return jsonify({'error': 'No selected file'}), 400
-        
+
         if not allowed_file(file.filename):
             return jsonify({'error': 'Only PDF files are allowed'}), 400
-        
-        # Save uploaded file
+
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
         file.save(filepath)
-        
-        # Extract and parse resume
+
         print(f"Reading resume from {filepath}...")
         text = extract_text_from_pdf(filepath)
-        
+
         print("Parsing resume...")
         resume_data = parse_resume_smart(text)
-        
-        # Fix missing location
+
         if not resume_data.get("location"):
             resume_data["location"] = LOCATION_PREFERENCE
-        
+
         return jsonify({
             'success': True,
             'resume_data': resume_data,
             'filename': filename
         })
-    
+
     except Exception as e:
         print(f"Error uploading resume: {str(e)}")
         return jsonify({'error': f'Failed to process resume: {str(e)}'}), 500
@@ -87,17 +81,17 @@ def fetch_jobs():
     try:
         print("Fetching jobs...")
         jobs, counts = fetch_all_jobs()
-        
+
         print("Removing duplicates...")
         jobs = remove_duplicates(jobs)
-        
+
         return jsonify({
             'success': True,
-            'jobs': jobs[:100],  # Return first 100 for preview
+            'jobs': jobs[:100],
             'total_jobs': len(jobs),
             'source_counts': counts
         })
-    
+
     except Exception as e:
         print(f"Error fetching jobs: {str(e)}")
         return jsonify({'error': f'Failed to fetch jobs: {str(e)}'}), 500
@@ -110,19 +104,19 @@ def match_jobs_route():
         data = request.json
         resume_data = data.get('resume_data')
         jobs = data.get('jobs')
-        
+
         if not resume_data or not jobs:
             return jsonify({'error': 'Missing resume data or jobs'}), 400
-        
+
         print("Matching jobs using AI...")
         matched_jobs = match_jobs(jobs, resume_data)
-        
+
         return jsonify({
             'success': True,
             'matched_jobs': matched_jobs,
             'match_count': len(matched_jobs)
         })
-    
+
     except Exception as e:
         print(f"Error matching jobs: {str(e)}")
         return jsonify({'error': f'Failed to match jobs: {str(e)}'}), 500
@@ -134,24 +128,23 @@ def export_excel():
     try:
         data = request.json
         matched_jobs = data.get('matched_jobs')
-        
+
         if not matched_jobs:
             return jsonify({'error': 'No jobs to export'}), 400
-        
+
         print("Exporting to Excel...")
-        # Create temporary file
         with tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False) as tmp:
             tmp_path = tmp.name
-        
+
         export_to_excel(matched_jobs, tmp_path)
-        
+
         return send_file(
             tmp_path,
             mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             as_attachment=True,
             download_name='matched_jobs.xlsx'
         )
-    
+
     except Exception as e:
         print(f"Error exporting to Excel: {str(e)}")
         return jsonify({'error': f'Failed to export: {str(e)}'}), 500
@@ -164,4 +157,5 @@ def health():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(debug=False, host='0.0.0.0', port=port)

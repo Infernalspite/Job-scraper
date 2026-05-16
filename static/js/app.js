@@ -8,7 +8,6 @@ const state = {
 
 // ========== STEP NAVIGATION ==========
 function showStep(stepNumber) {
-    // Hide all sections
     document.querySelectorAll('.step-section').forEach(section => {
         section.classList.remove('active');
     });
@@ -16,7 +15,6 @@ function showStep(stepNumber) {
         step.classList.remove('active');
     });
 
-    // Show current section
     document.getElementById(`step-${stepNumber}`).classList.add('active');
     document.getElementById(`step-${stepNumber}-indicator`).classList.add('active');
 
@@ -32,37 +30,32 @@ const uploadError = document.getElementById('uploadError');
 const uploadLoading = document.getElementById('uploadLoading');
 const nextBtn1 = document.getElementById('nextBtn1');
 
-// Drag and drop
 uploadArea.addEventListener('click', () => resumeFile.click());
 uploadArea.addEventListener('dragover', (e) => {
     e.preventDefault();
-    uploadArea.style.background = '#f0f2ff';
+    uploadArea.style.background = '#1e1e38';
     uploadArea.style.borderColor = '#764ba2';
 });
 uploadArea.addEventListener('dragleave', () => {
-    uploadArea.style.background = '#f8f9ff';
-    uploadArea.style.borderColor = '#667eea';
+    uploadArea.style.background = '#1a1a30';
+    uploadArea.style.borderColor = '#3a3a5e';
 });
 uploadArea.addEventListener('drop', (e) => {
     e.preventDefault();
-    uploadArea.style.background = '#f8f9ff';
-    uploadArea.style.borderColor = '#667eea';
-    
+    uploadArea.style.background = '#1a1a30';
+    uploadArea.style.borderColor = '#3a3a5e';
     if (e.dataTransfer.files.length > 0) {
         resumeFile.files = e.dataTransfer.files;
         uploadResume();
     }
 });
 
-// File selection
 resumeFile.addEventListener('change', uploadResume);
 
 async function uploadResume() {
     if (!resumeFile.files.length) return;
-
     const file = resumeFile.files[0];
-    
-    // Validation
+
     if (file.type !== 'application/pdf') {
         showError(uploadError, 'Please upload a PDF file');
         return;
@@ -72,7 +65,6 @@ async function uploadResume() {
         return;
     }
 
-    // Show loading
     uploadLoading.classList.remove('hidden');
     uploadError.classList.add('hidden');
     resumeInfo.classList.add('hidden');
@@ -94,17 +86,15 @@ async function uploadResume() {
         const data = await response.json();
         state.resumeData = data.resume_data;
 
-        // Display resume info
         document.getElementById('extractedRole').textContent = state.resumeData.role || '-';
         document.getElementById('extractedLocation').textContent = state.resumeData.location || '-';
-        document.getElementById('extractedSkills').textContent = 
+        document.getElementById('extractedSkills').textContent =
             state.resumeData.skills.slice(0, 5).join(', ') || '-';
 
         resumeInfo.classList.remove('hidden');
         uploadLoading.classList.add('hidden');
         nextBtn1.disabled = false;
         uploadArea.style.opacity = '0.5';
-
     } catch (error) {
         console.error('Error:', error);
         showError(uploadError, error.message);
@@ -126,10 +116,7 @@ fetchJobsBtn.addEventListener('click', async () => {
     fetchJobsBtn.disabled = true;
 
     try {
-        const response = await fetch('/api/fetch-jobs', {
-            method: 'POST'
-        });
-
+        const response = await fetch('/api/fetch-jobs', { method: 'POST' });
         if (!response.ok) {
             const data = await response.json();
             throw new Error(data.error || 'Failed to fetch jobs');
@@ -138,7 +125,6 @@ fetchJobsBtn.addEventListener('click', async () => {
         const data = await response.json();
         state.jobs = data.jobs;
 
-        // Display stats
         document.getElementById('totalJobs').textContent = data.total_jobs;
         const sources = Object.entries(data.source_counts)
             .map(([src, count]) => `${src}: ${count}`)
@@ -149,7 +135,6 @@ fetchJobsBtn.addEventListener('click', async () => {
         fetchLoading.classList.add('hidden');
         nextBtn2.disabled = false;
         fetchJobsBtn.disabled = false;
-
     } catch (error) {
         console.error('Error:', error);
         showError(fetchError, error.message);
@@ -189,14 +174,11 @@ matchJobsBtn.addEventListener('click', async () => {
         const data = await response.json();
         state.matchedJobs = data.matched_jobs;
 
-        // Display stats
         document.getElementById('matchedCount').textContent = data.match_count;
-
         matchStats.classList.remove('hidden');
         matchLoading.classList.add('hidden');
         nextBtn3.disabled = false;
         matchJobsBtn.disabled = false;
-
     } catch (error) {
         console.error('Error:', error);
         showError(matchError, error.message);
@@ -212,7 +194,6 @@ const jobsList = document.getElementById('jobsList');
 const exportError = document.getElementById('exportError');
 const exportLoading = document.getElementById('exportLoading');
 
-// Show preview when entering step 4
 document.getElementById('nextBtn3').addEventListener('click', () => {
     displayJobsPreview();
     showStep(4);
@@ -220,18 +201,18 @@ document.getElementById('nextBtn3').addEventListener('click', () => {
 
 function displayJobsPreview() {
     jobsList.innerHTML = '';
-    
     state.matchedJobs.slice(0, 10).forEach(job => {
         const jobDiv = document.createElement('div');
         jobDiv.className = 'job-item';
         jobDiv.innerHTML = `
             <div class="job-score">${(job.match_score * 100).toFixed(0)}%</div>
-            <div class="job-title">${job.title}</div>
-            <div class="job-company">${job.company}</div>
+            <div>
+                <div class="job-title">${job.title}</div>
+                <div class="job-company">${job.company}</div>
+            </div>
         `;
         jobsList.appendChild(jobDiv);
     });
-
     jobsPreview.classList.remove('hidden');
 }
 
@@ -252,7 +233,6 @@ exportBtn.addEventListener('click', async () => {
             throw new Error(data.error || 'Failed to export');
         }
 
-        // Download file
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -265,7 +245,6 @@ exportBtn.addEventListener('click', async () => {
 
         exportLoading.classList.add('hidden');
         exportBtn.disabled = false;
-
     } catch (error) {
         console.error('Error:', error);
         showError(exportError, error.message);
@@ -274,23 +253,16 @@ exportBtn.addEventListener('click', async () => {
     }
 });
 
-// ========== BACK BUTTONS ==========
+// ========== NAVIGATION BUTTONS ==========
 document.getElementById('backBtn2').addEventListener('click', () => showStep(1));
 document.getElementById('backBtn3').addEventListener('click', () => showStep(2));
 document.getElementById('backBtn4').addEventListener('click', () => showStep(3));
-
-// ========== NEXT BUTTONS ==========
 document.getElementById('nextBtn1').addEventListener('click', () => showStep(2));
 document.getElementById('nextBtn2').addEventListener('click', () => showStep(3));
 
 // ========== UTILITY FUNCTIONS ==========
 function showError(element, message) {
-    element.textContent = `❌ ${message}`;
-    element.classList.remove('hidden');
-}
-
-function showSuccess(element, message) {
-    element.textContent = `✅ ${message}`;
+    element.textContent = `Error: ${message}`;
     element.classList.remove('hidden');
 }
 
