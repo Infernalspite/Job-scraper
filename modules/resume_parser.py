@@ -1,7 +1,4 @@
-import spacy
-from geotext import GeoText
-
-nlp = spacy.load("en_core_web_sm")
+import re
 
 # Common tech roles
 ROLE_KEYWORDS = [
@@ -10,33 +7,35 @@ ROLE_KEYWORDS = [
     "frontend developer", "full stack developer"
 ]
 
+
 def parse_resume(text):
-    doc = nlp(text.lower())
+    text_lower = text.lower()
 
     skills = set()
     roles = set()
 
-    # -------- SKILLS -------- #
-    for chunk in doc.noun_chunks:
-        txt = chunk.text.strip()
-
-        if 2 < len(txt) < 30:
-            if not any(x in txt for x in ["project", "experience", "objective"]):
-                skills.add(txt)
+    # -------- SKILLS (keyword-based) -------- #
+    words = re.findall(r'\b[a-zA-Z][a-zA-Z\+\#\.\/\-]{2,25}\b', text_lower)
+    for word in words:
+        if word not in ["project", "experience", "objective", "education", "university"]:
+            skills.add(word)
 
     # -------- ROLES -------- #
     for role in ROLE_KEYWORDS:
-        if role in text.lower():
+        if role in text_lower:
             roles.add(role)
 
-    # -------- LOCATION (SMART) -------- #
-    places = GeoText(text)
-
+    # -------- LOCATION -------- #
     location = None
-    if places.cities:
-        location = places.cities[0]
-    elif places.countries:
-        location = places.countries[0]
+    location_keywords = [
+        "bangalore", "bengaluru", "mumbai", "delhi", "hyderabad",
+        "chennai", "pune", "kolkata", "noida", "gurgaon",
+        "india", "remote"
+    ]
+    for loc in location_keywords:
+        if loc in text_lower:
+            location = loc.title()
+            break
 
     return {
         "skills": list(skills),

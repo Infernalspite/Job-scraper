@@ -1,22 +1,27 @@
-import spacy
+import re
 
-nlp = spacy.load("en_core_web_sm")
 
 def extract_skills_and_location(text):
-    doc = nlp(text)
+    text_lower = text.lower()
 
     skills = set()
     location = None
 
-    for chunk in doc.noun_chunks:
-        txt = chunk.text.lower()
+    # Extract multi-word skill-like phrases
+    words = re.findall(r'\b[a-zA-Z][a-zA-Z\+\#\.\/\-]{2,25}\b', text_lower)
+    for word in words:
+        if word not in ["project", "experience", "achievement", "education", "university"]:
+            skills.add(word)
 
-        if len(txt) > 3 and len(txt.split()) <= 3:
-            if not any(x in txt for x in ["project", "experience", "achievement"]):
-                skills.add(txt)
-
-    for ent in doc.ents:
-        if ent.label_ == "GPE":
-            location = ent.text
+    # Extract location
+    location_keywords = [
+        "bangalore", "bengaluru", "mumbai", "delhi", "hyderabad",
+        "chennai", "pune", "kolkata", "noida", "gurgaon",
+        "india", "remote"
+    ]
+    for loc in location_keywords:
+        if loc in text_lower:
+            location = loc.title()
+            break
 
     return list(skills), location

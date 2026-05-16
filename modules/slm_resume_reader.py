@@ -1,9 +1,4 @@
-from sentence_transformers import SentenceTransformer
-import numpy as np
-import spacy
-
-nlp = spacy.load("en_core_web_sm")
-model = SentenceTransformer("all-MiniLM-L6-v2")
+import re
 
 ROLE_LABELS = [
     "data scientist",
@@ -11,45 +6,83 @@ ROLE_LABELS = [
     "data analyst",
     "software engineer",
     "backend developer",
-    "frontend developer"
+    "frontend developer",
+    "full stack developer",
+    "ai engineer",
 ]
 
+# Common technical skills to look for
+SKILL_KEYWORDS = [
+    "python", "java", "javascript", "typescript", "c++", "c#", "ruby", "go",
+    "sql", "nosql", "mongodb", "postgresql", "mysql", "redis", "elasticsearch",
+    "react", "angular", "vue", "node.js", "express", "django", "flask", "fastapi",
+    "docker", "kubernetes", "aws", "azure", "gcp", "terraform", "jenkins", "ci/cd",
+    "git", "linux", "rest api", "graphql", "microservices",
+    "machine learning", "deep learning", "nlp", "computer vision", "tensorflow",
+    "pytorch", "scikit-learn", "pandas", "numpy", "matplotlib",
+    "html", "css", "sass", "tailwind", "bootstrap",
+    "agile", "scrum", "jira", "devops", "testing", "unit testing",
+    "data analysis", "data visualization", "tableau", "power bi", "excel",
+    "spark", "hadoop", "kafka", "airflow", "etl",
+    "figma", "photoshop", "ui/ux", "responsive design",
+]
+
+# Common location indicators
+LOCATION_KEYWORDS = [
+    "india", "bangalore", "bengaluru", "mumbai", "delhi", "hyderabad", "chennai",
+    "pune", "kolkata", "ahmedabad", "noida", "gurgaon", "gurugram", "jaipur",
+    "new york", "san francisco", "london", "singapore", "dubai", "toronto",
+    "remote", "hybrid", "on-site", "work from home",
+]
+
+
 def extract_location(text):
-    doc = nlp(text)
-
-    for ent in doc.ents:
-        if ent.label_ == "GPE":
-            return ent.text
-
+    """Extract location from resume text using keyword matching."""
+    text_lower = text.lower()
+    for loc in LOCATION_KEYWORDS:
+        if loc in text_lower:
+            return loc.title()
     return None
 
 
 def extract_skills(text):
-    doc = nlp(text)
+    """Extract skills from resume text using keyword matching."""
+    text_lower = text.lower()
+    found_skills = []
 
-    skills = set()
+    for skill in SKILL_KEYWORDS:
+        # Use word boundary matching for short skills to avoid false positives
+        if len(skill) <= 3:
+            pattern = r'\b' + re.escape(skill) + r'\b'
+            if re.search(pattern, text_lower):
+                found_skills.append(skill)
+        else:
+            if skill in text_lower:
+                found_skills.append(skill)
 
-    for chunk in doc.noun_chunks:
-        txt = chunk.text.lower()
-
-        if 2 < len(txt) < 30:
-            if not any(x in txt for x in ["project", "experience", "objective"]):
-                skills.add(txt)
-
-    return list(skills)
+    return found_skills
 
 
 def detect_role(text):
-    embeddings = model.encode([text] + ROLE_LABELS)
+    """Detect the most likely role from resume text using keyword matching."""
+    text_lower = text.lower()
+    best_role = "software engineer"
+    best_count = 0
 
-    resume_vec = embeddings[0]
-    role_vecs = embeddings[1:]
+    for role in ROLE_LABELS:
+        role_words = role.split()
+        count = sum(1 for word in role_words if word in text_lower)
 
-    scores = np.dot(role_vecs, resume_vec)
+        if count > best_count:
+            best_count = count
+            best_role = role
 
-    best_index = int(np.argmax(scores))
+    # Also check for exact role matches
+    for role in ROLE_LABELS:
+        if role in text_lower:
+            return role
 
-    return ROLE_LABELS[best_index]
+    return best_role
 
 
 def parse_resume_smart(text):

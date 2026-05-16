@@ -1,19 +1,25 @@
-from sentence_transformers import SentenceTransformer, util
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
-model = SentenceTransformer('all-MiniLM-L6-v2')
+
 def match_jobs(jobs, resume_data):
-    role = resume_data["role"]
-    skills = resume_data["skills"]
-    location = resume_data["location"]
+    role = resume_data.get("role", "")
+    skills = resume_data.get("skills", [])
+    location = resume_data.get("location", "")
 
     resume_text = role + " " + " ".join(skills)
 
     job_texts = [job["title"] + " " + job["description"] for job in jobs]
 
-    job_emb = model.encode(job_texts, convert_to_tensor=True)
-    resume_emb = model.encode(resume_text, convert_to_tensor=True)
+    if not job_texts:
+        return []
 
-    scores = util.cos_sim(resume_emb, job_emb)[0]
+    # Build TF-IDF vectors and compute cosine similarity
+    corpus = [resume_text] + job_texts
+    vectorizer = TfidfVectorizer(stop_words="english", max_features=5000)
+    tfidf_matrix = vectorizer.fit_transform(corpus)
+
+    scores = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:])[0]
 
     results = []
 
@@ -21,12 +27,12 @@ def match_jobs(jobs, resume_data):
         score = float(scores[i])
         job["match_score"] = score
 
-        # ROLE FILTER
+        # Role filter
         if role.lower() not in job["title"].lower():
             if score < 0.2:
                 continue
 
-        # LOCATION FILTER
+        # Location filter
         if location:
             if location.lower() not in job["description"].lower():
                 if score < 0.15:
