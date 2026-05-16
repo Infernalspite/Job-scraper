@@ -15,7 +15,10 @@ from modules.matcher import match_jobs
 from modules.exporter import export_to_excel
 from config import LOCATION_PREFERENCE
 
-app = Flask(__name__)
+base_dir = os.path.dirname(os.path.abspath(__file__))
+app = Flask(__name__, 
+            static_folder=os.path.join(base_dir, 'static'),
+            template_folder=os.path.join(base_dir, 'templates'))
 
 # Configuration
 UPLOAD_FOLDER = tempfile.gettempdir()
