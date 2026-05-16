@@ -6,7 +6,7 @@ pytesseract==0.3.10
 sentence-transformers==2.2.2
 spacy==3.5.0
 geotext==0.4.0
-pandas==2.0.3
+pandas==2.2.0
 openpyxl==3.1.2
 requests==2.31.0
 beautifulsoup4==4.12.2
