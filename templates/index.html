@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Scraper - AI-Powered Job Matching</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <h1>🎯 Job Scraper</h1>
+            <p>AI-Powered Job Matching with Resume Upload</p>
+        </div>
+
+        <!-- STEP INDICATORS -->
+        <div class="steps">
+            <div class="step active" id="step-1-indicator" onclick="showStep(1)">
+                <div class="step-number">1</div>
+                <div class="step-label">Upload Resume</div>
+            </div>
+            <div class="step" id="step-2-indicator" onclick="showStep(2)">
+                <div class="step-number">2</div>
+                <div class="step-label">Fetch Jobs</div>
+            </div>
+            <div class="step" id="step-3-indicator" onclick="showStep(3)">
+                <div class="step-number">3</div>
+                <div class="step-label">Match Jobs</div>
+            </div>
+            <div class="step" id="step-4-indicator" onclick="showStep(4)">
+                <div class="step-number">4</div>
+                <div class="step-label">Export</div>
+            </div>
+        </div>
+
+        <!-- CONTENT AREA -->
+        <div class="content">
+            <!-- STEP 1: UPLOAD RESUME -->
+            <div class="step-section active" id="step-1">
+                <h2>📄 Upload Your Resume</h2>
+                <p style="color: #666; margin-top: 10px; margin-bottom: 20px;">
+                    Upload your PDF resume to extract your professional information
+                </p>
+
+                <div class="upload-area" id="uploadArea">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                    <h3>Drag & Drop Your Resume</h3>
+                    <p>or click to browse</p>
+                    <p class="small-text">PDF files only (Max 10 MB)</p>
+                </div>
+                <input type="file" id="resumeFile" accept=".pdf">
+
+                <div id="uploadLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Processing your resume...</p>
+                </div>
+
+                <div id="uploadError" class="error"></div>
+
+                <div id="resumeInfo" class="info-box">
+                    <h3>✅ Resume Information Extracted</h3>
+                    <div class="info-row">
+                        <span class="info-label">Professional Role:</span>
+                        <span class="info-value" id="extractedRole">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Location:</span>
+                        <span class="info-value" id="extractedLocation">-</span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">Top Skills:</span>
+                        <span class="info-value" id="extractedSkills">-</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-primary" id="nextBtn1" disabled>Next Step →</button>
+                </div>
+            </div>
+
+            <!-- STEP 2: FETCH JOBS -->
+            <div class="step-section" id="step-2">
+                <h2>🔍 Fetch Jobs</h2>
+                <p style="color: #666; margin-top: 10px; margin-bottom: 20px;">
+                    Scrape jobs from multiple sources based on your profile
+                </p>
+
+                <button class="btn-action" id="fetchJobsBtn">
+                    🚀 Fetch Jobs from All Sources
+                </button>
+
+                <div id="fetchLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Fetching jobs from multiple sources...</p>
+                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">This may take 2-5 minutes</p>
+                </div>
+
+                <div id="fetchError" class="error"></div>
+
+                <div id="jobStats" class="stats">
+                    <h3>✅ Jobs Fetched Successfully</h3>
+                    <div class="stat-item">
+                        <div class="stat-label">Total Jobs Found</div>
+                        <div class="stat-value" id="totalJobs">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Jobs by Source</div>
+                        <div class="stat-value" style="font-size: 1em;" id="sourceBreakdown">-</div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary" id="backBtn2">← Back</button>
+                    <button class="btn-primary" id="nextBtn2" disabled>Next Step →</button>
+                </div>
+            </div>
+
+            <!-- STEP 3: MATCH JOBS -->
+            <div class="step-section" id="step-3">
+                <h2>🤖 AI Job Matching</h2>
+                <p style="color: #666; margin-top: 10px; margin-bottom: 20px;">
+                    Use AI to find the best job matches for your profile
+                </p>
+
+                <button class="btn-action" id="matchJobsBtn">
+                    ⚡ Run AI Matching Algorithm
+                </button>
+
+                <div id="matchLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Analyzing job descriptions with AI...</p>
+                    <p style="font-size: 0.9em; color: #999; margin-top: 10px;">This may take 1-3 minutes</p>
+                </div>
+
+                <div id="matchError" class="error"></div>
+
+                <div id="matchStats" class="stats">
+                    <h3>✅ Matching Complete</h3>
+                    <div class="stat-item">
+                        <div class="stat-label">Jobs Matched</div>
+                        <div class="stat-value" id="matchedCount">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">Match Method</div>
+                        <div class="stat-value" style="font-size: 1em;">Semantic Similarity Analysis</div>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary" id="backBtn3">← Back</button>
+                    <button class="btn-primary" id="nextBtn3" disabled>Next Step →</button>
+                </div>
+            </div>
+
+            <!-- STEP 4: EXPORT RESULTS -->
+            <div class="step-section" id="step-4">
+                <h2>📊 Export Results</h2>
+                <p style="color: #666; margin-top: 10px; margin-bottom: 20px;">
+                    Download your matched jobs as an Excel file
+                </p>
+
+                <div id="jobsPreview" class="jobs-list">
+                    <h3 style="margin-bottom: 15px;">Top Matched Jobs</h3>
+                    <div id="jobsList"></div>
+                </div>
+
+                <button class="btn-action" id="exportBtn">
+                    📥 Download Excel File
+                </button>
+
+                <div id="exportLoading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Generating Excel file...</p>
+                </div>
+
+                <div id="exportError" class="error"></div>
+
+                <div class="button-group">
+                    <button class="btn-secondary" id="backBtn4">← Back</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/app.js"></script>
+</body>
+</html>
