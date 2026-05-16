@@ -1,0 +1,13 @@
+.git
+data/
+uploads/
+*.db
+*.csv
+*.xlsx
+*.pdf
+__pycache__
+.env
+README.md
+SETUP_GUIDE.md
+main.py
+Procfile
